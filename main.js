@@ -17,6 +17,7 @@ controls.update();
 const axesHelper = new THREE.AxesHelper(axisSize);
 scene.add(axesHelper);
 const grassGeometry = new THREE.PlaneGeometry(fence.x * 5, fence.x * 5);
+const arrayOfPigs = [];
 
 renderer.setSize( window.innerWidth, window.innerHeight );
 renderer.setClearColor(0xC2E3CC, 1);
@@ -28,6 +29,16 @@ let houseModel;
 function animate() {
     sunLight.position.x = Math.cos(Date.now() * 0.001) * 5;
     sunMesh.position.x = sunLight.position.x;
+    arrayOfPigs.forEach((eachPig, index) => {
+        let threeCoordinates = new THREE.Vector3();
+
+        eachPig.position.y = Math.cos(Date.now() * 0.01 + index)*0.1;
+        //eachPig.position.x += 0.001;
+        //eachPig.position.y -= 0.001;
+        eachPig.rotation.y += Math.cos(Date.now() * 0.01)*0.02;;
+        eachPig.getWorldPosition(threeCoordinates);
+        console.log(`${index}th pig positions is: ${JSON.stringify(threeCoordinates)}`);
+    });
 	renderer.render( scene, camera );
     controls.update();
 }
@@ -118,7 +129,7 @@ Promise.all([housePromise, grassPromise, fencePromise, pigPromise]).then(functio
     scene.add( houseModel );
     houseModel.rotation.z = 0;
     let pigModel = pigGltf.scene;
-    cloneAndPlacePig(pigModel);
+    arrayOfPigs.push(...cloneAndPlacePig(pigModel));
 
     renderer.setAnimationLoop( animate );
 }).catch(function ( error ) {
