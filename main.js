@@ -56,12 +56,12 @@ scene.add(sunMesh);
 
 const loader = new GLTFLoader();
 const grassLoader = new THREE.TextureLoader();
-const housePromise = loader.loadAsync( './public/Fantasy_Inn.glb');
-const pigPromise = loader.loadAsync('./public/pig.glb');
-const grassPromise = grassLoader.loadAsync('./public/grass.jpg');
+const housePromise = loader.loadAsync( '/static-files/Fantasy_Inn.glb');
+const pigPromise = loader.loadAsync('/static-files/pig.glb');
+const grassPromise = grassLoader.loadAsync('/static-files/grass.jpg');
 
 const objectLoader = new OBJLoader();
-const fencePromise = objectLoader.loadAsync('./public/Fence.obj');
+const fencePromise = objectLoader.loadAsync('/static-files/Fence.obj');
 
 function cloneAndPlaceFence(fenceObject){
     const arrayOfFences = [];

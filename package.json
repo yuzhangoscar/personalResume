@@ -4,13 +4,16 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "devServer": "npx vite"
+    "devServer": "npx vite",
+    "build": "vite build",
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "express": "^4.21.0",
     "three": "^0.168.0"
   },
   "devDependencies": {
