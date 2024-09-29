@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { gsap } from 'gsap';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
@@ -10,6 +11,7 @@ const fence = {
     z: 0.11
 }
 const scene = new THREE.Scene();
+const raycaster = new THREE.Raycaster();
 const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
 const renderer = new THREE.WebGLRenderer();
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -18,6 +20,7 @@ const axesHelper = new THREE.AxesHelper(axisSize);
 scene.add(axesHelper);
 const grassGeometry = new THREE.PlaneGeometry(fence.x * 5, fence.x * 5);
 const arrayOfPigs = [];
+const mouse = new THREE.Vector2(); // Declare the mouse variable here
 
 renderer.setSize( window.innerWidth, window.innerHeight );
 renderer.setClearColor(0xC2E3CC, 1);
@@ -26,18 +29,54 @@ document.body.appendChild( renderer.domElement );
 camera.position.z = 20;
 let houseModel;
 
+function onMouseClick(event) {
+    // Calculate mouse position in normalized device coordinates (-1 to +1)
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    // Update the raycaster with the camera and mouse position
+    raycaster.setFromCamera(mouse, camera);
+
+    // Calculate objects intersecting the ray
+    const intersects = raycaster.intersectObjects(scene.children);
+
+    if (intersects.length > 0) {
+        const intersectedObject = intersects[0].object;
+        const box = new THREE.Box3().setFromObject(intersectedObject);
+        const targetPosition = box.getCenter(new THREE.Vector3()).add(new THREE.Vector3(0, 0, 5));
+        
+        // Calculate desired camera position
+        const distance = (box.getSize(new THREE.Vector3()).length() / (2 * Math.tan((camera.fov * Math.PI) / 360))) * 2.5;
+        const zoomPosition = box.getCenter(new THREE.Vector3()).add(new THREE.Vector3(0, 0, distance));
+
+        const targetCenter = box.getCenter(new THREE.Vector3());
+        // Use GSAP to animate the camera position
+        gsap.to(camera.position, {
+            duration: 2.5, // duration of the animation
+            x: zoomPosition.x,
+            y: zoomPosition.y,
+            z: zoomPosition.z,
+            onUpdate: () => {
+                camera.lookAt(targetCenter); // Keep looking at the object
+            }
+        });
+    }
+}
+
+// Add event listener for mouse clicks
+window.addEventListener('click', onMouseClick, false);
+
 function animate() {
     sunLight.position.x = Math.cos(Date.now() * 0.001) * 5;
     sunMesh.position.x = sunLight.position.x;
     arrayOfPigs.forEach((eachPig, index) => {
         let threeCoordinates = new THREE.Vector3();
 
-        eachPig.position.y = Math.cos(Date.now() * 0.01 + index)*0.1;
+        eachPig.position.y = Math.cos(Date.now() * 0.01 + index)*0.1+0.5;
         //eachPig.position.x += 0.001;
         //eachPig.position.y -= 0.001;
         eachPig.rotation.y += Math.cos(Date.now() * 0.01)*0.02;;
         eachPig.getWorldPosition(threeCoordinates);
-        console.log(`${index}th pig positions is: ${JSON.stringify(threeCoordinates)}`);
     });
 	renderer.render( scene, camera );
     controls.update();
@@ -103,7 +142,7 @@ function cloneAndPlacePig(pigModel) {
         let randomX = getRandomIntInclusive(-fence.x * 2, fence.x * 2);
         let randomZ = getRandomIntInclusive(-fence.x * 2, fence.x * 2);
 
-        newPig.position.set(randomX, 0.42, randomZ);
+        newPig.position.set(randomX, -0.47, randomZ);
         scene.add(newPig);
     }
     return arrayOfPigs;
