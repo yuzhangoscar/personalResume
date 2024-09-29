@@ -10,6 +10,8 @@ const fence = {
     y: 0.9,
     z: 0.11
 }
+const grassWidth = 5.5;
+const grassLength = 5.5;
 const scene = new THREE.Scene();
 const raycaster = new THREE.Raycaster();
 const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
@@ -28,6 +30,7 @@ document.body.appendChild( renderer.domElement );
 
 camera.position.z = 20;
 let houseModel;
+let direction = 0.001;
 
 function onMouseClick(event) {
     // Calculate mouse position in normalized device coordinates (-1 to +1)
@@ -63,6 +66,16 @@ function onMouseClick(event) {
     }
 }
 
+function pigWalk(thisPig) {
+    if (thisPig.position.x >= grassWidth) {
+        direction = -0.001;
+    }
+    else if (thisPig.position.x <= -grassWidth) {
+        direction = 0.001;
+    }
+    thisPig.position.x += direction;
+}
+
 // Add event listener for mouse clicks
 window.addEventListener('click', onMouseClick, false);
 
@@ -73,10 +86,9 @@ function animate() {
         let threeCoordinates = new THREE.Vector3();
 
         eachPig.position.y = Math.cos(Date.now() * 0.01 + index)*0.1+0.5;
-        //eachPig.position.x += 0.001;
-        //eachPig.position.y -= 0.001;
-        eachPig.rotation.y += Math.cos(Date.now() * 0.01)*0.02;;
+        eachPig.rotation.y += Math.cos(Date.now() * 0.01)*0.02;
         eachPig.getWorldPosition(threeCoordinates);
+        pigWalk(eachPig);
     });
 	renderer.render( scene, camera );
     controls.update();
@@ -135,12 +147,12 @@ function getRandomIntInclusive(min, max) {
 
 function cloneAndPlacePig(pigModel) {
     const arrayOfPigs = [];
-    for (let numberOfPigs = 0; numberOfPigs < 10; numberOfPigs ++) {
+    for (let numberOfPigs = 0; numberOfPigs < 3; numberOfPigs ++) {
         let newPig = pigModel.clone();
         arrayOfPigs.push(newPig);
 
-        let randomX = getRandomIntInclusive(-fence.x * 2, fence.x * 2);
-        let randomZ = getRandomIntInclusive(-fence.x * 2, fence.x * 2);
+        let randomX = getRandomIntInclusive(-grassWidth, grassWidth);
+        let randomZ = getRandomIntInclusive(-grassLength, grassLength);
 
         newPig.position.set(randomX, -0.47, randomZ);
         scene.add(newPig);
@@ -162,6 +174,9 @@ Promise.all([housePromise, grassPromise, fencePromise, pigPromise]).then(functio
     });
 
     const grassMesh = new THREE.Mesh(grassGeometry, grassMaterial);
+    const grassBox = new THREE.Box3().setFromObject(grassMesh);
+    const size = grassBox.getSize(new THREE.Vector3());
+    console.log(`grass size is ${JSON.stringify(size)}`);
     grassMesh.rotation.x = -1.57;
     scene.add(grassMesh);
 	houseModel = houseGltf.scene;
